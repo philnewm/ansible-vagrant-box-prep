@@ -8,4 +8,63 @@
 - name: Gather package facts
   ansible.builtin.package_facts:
 
+- name: Install python3-selinux
+  become: true
+  when: "{{ python_selinux[ansible_os_family] }} not in ansible_facts.packages"
+  ansible.builtin.package:
+    name: "{{ python_selinux[ansible_os_family] }}"
+    state: present
+
+- name: Install Vagrant public SSH key
+  ansible.posix.authorized_key:
+    user: vagrant
+    state: present
+    key: https://raw.githubusercontent.com/hashicorp/vagrant/main/keys/vagrant.pub
+
+- name: Install NFS
+  become: true
+  when: "{{ python_selinux[ansible_os_family] }} not in ansible_facts.packages"
+  ansible.builtin.package:
+    name: "{{ nfs_package[ansible_os_family] }}"
+    state: present
+
+- name: Run Ubuntu network setup
+  when: ansible_distribution == 'Ubuntu'
+  block:
+    - name: Remove initial netplan config
+      become: true
+      ansible.builtin.file:
+        path: /etc/netplan/00-installer-config.yaml
+        state: absent
+
+    - name: Setup network
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/netplan/00-install-config.yaml
+        content: |
+          network:
+            version: 2
+            renderer: NetworkManager
+            ethernets:
+              enp0s3:
+                dhcp4: true
+                optional: false
+        mode: "0600"
+
+    - name: Apply netplan config
+      become: true
+      ansible.builtin.command:
+        cmd: |
+          netplan generate
+          netplan apply
+      register: result
+      changed_when: result.rc == 0
+
+    - name: Disable networkd-wait-online
+      become: true
+      ansible.builtin.systemd_service:
+        name: systemd-networkd-wait-online
+        enabled: false
+        state: stopped
+
 ...

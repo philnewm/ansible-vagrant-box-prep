@@ -3,4 +3,12 @@
 # Variables for ansible-role-template
 
 
+python_selinux:
+  "RedHat": "python3-libselinux"
+  "Debian": "python3-selinux"
+
+nfs_package:
+  "RedHat": nfs-utils
+  "Debian": nfs-common
+
 ...

@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 jobs:
-  ansible-vbox-guest:
+  ansible-vagrant-box-prep:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5

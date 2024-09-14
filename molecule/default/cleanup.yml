@@ -11,7 +11,7 @@
     # TODO check if VM even exists
   roles:
     - role: ansible-vagrant-box-prep
-      ansible_vagrant_box_prep_state: absent
+      vagrant_box_prep_state: absent
 
 - name: Cleanup
   hosts: localhost

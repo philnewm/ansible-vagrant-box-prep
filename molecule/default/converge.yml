@@ -6,6 +6,6 @@
   roles:
     - role: ansible-vagrant-box-prep
       tasks_from: main
-      ansible_vagrant_box_prep_state: present
+      vagrant_box_prep_state: present
 
 ...

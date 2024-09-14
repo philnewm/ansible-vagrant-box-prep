@@ -1,7 +1,65 @@
 ---
 
-# Tasks to remove ansible-role-template
+# Tasks to remove ansible-vagrant-box-prep
 
+- name: Remove Vagrant public SSH key
+  ansible.posix.authorized_key:
+    user: vagrant
+    state: absent
+    key: https://raw.githubusercontent.com/hashicorp/vagrant/main/keys/vagrant.pub
+
+- name: Remove NFS
+  become: true
+  when: python_selinux[ansible_os_family] not in ansible_facts.packages
+  ansible.builtin.package:
+    name: "{{ nfs_package[ansible_os_family] }}"
+    state: absent
+
+- name: Run Ubuntu network setup
+  when: ansible_distribution == 'Ubuntu'
+  become: true
+  block:
+    - name: Remove Added netplan config
+      ansible.builtin.file:
+        path: "{{ expected_net_plan_config_path }}"
+        state: absent
+
+    - name: Revert network config
+      ansible.builtin.copy:
+        dest: "{{ initial_netplan_config_path }}"
+        content: |
+          # This file is generated from information provided by the datasource.  Changes
+          # to it will not persist across an instance reboot.  To disable cloud-init's
+          # network configuration capabilities, write a file
+          # /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+          # network: {config: disabled}
+          network:
+            ethernets:
+              enp0s3:
+                dhcp4: true
+                dhcp6: true
+                match:
+                  macaddress: 02:c6:f7:1b:46:08
+                set-name: enp0s3
+            version: 2
+        mode: "0600"
+      register: setup_network
+
+    - name: Apply netplan config
+      when: setup_network.changed
+      ansible.builtin.command:
+        cmd: |
+          netplan generate
+          netplan apply
+      register: result
+      changed_when: result.rc == 0
+
+    - name: Re-enable networkd-wait-online
+      when: setup_network.changed
+      ansible.builtin.systemd_service:
+        name: systemd-networkd-wait-online
+        enabled: true
+        state: started
 
 - name: Remove unused dependencies
   become: true

@@ -1,8 +1,8 @@
-## Role Name
+## Vagrant Box Prep
 
-[![ci-testing](https://github.com/philnewm/ansible-role-template/actions/workflows/molecule-ci.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/molecule-ci.yml)
+[![Alma9-CI](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/alma9-ci.yml/badge.svg)](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/alma9-ci.yml) [![Rocky9-CI](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/rocky9-ci.yml/badge.svg)](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/rocky9-ci.yml) [![CentOS9-CI](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/centos9-ci.yml/badge.svg)](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/centos9-ci.yml) [![Debian12-CI](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/debian12-ci.yml/badge.svg)](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/debian12-ci.yml) [![Ubuntu22.04-CI](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/ubuntu2204-ci.yml/badge.svg)](https://github.com/philnewm/ansible-vagrant-box-prep/actions/workflows/ubuntu2204-ci.yml)
 
-Role description
+Runs a bunch of small tasks to prepare a vagrant box which uses the provider virualbox.
 
 
 
@@ -11,12 +11,8 @@ This role includes a full vagrant based molecule testing setup at `extensions/mo
 # Structure
 
 ```
-📦 ansible-role-template
+📦 ansible-vagrant-box-prep
  ┣ 📂 defaults
- ┃ ┗ 📜 main.yml
-  ┣ 📂 files
- ┃ ┗ 📜 file_placeholder.yml
- ┣ 📂 handlers
  ┃ ┗ 📜 main.yml
  ┣ 📂 meta
  ┃ ┗ 📜 main.yml
@@ -30,9 +26,7 @@ This role includes a full vagrant based molecule testing setup at `extensions/mo
  ┃ ┣ 📜 absent.yml
  ┃ ┗ 📜 init.yml
  ┣ 📂 templates
- ┃ ┗ ⛩️ template.j2
- ┣ 📂 vars
- ┃ ┗ 📜 main.yml
+ ┃ ┗ ⛩️ ubuntu_netplan_config.j2
  ┗ 🗒️ README.md
  ┗ 📓 requirements.txt
 
@@ -40,25 +34,18 @@ This role includes a full vagrant based molecule testing setup at `extensions/mo
 
 Describe and explain role structure. 
 
-## Requirements
-
-Ellaborate external dependencies and how to use them.
-
 ## Role Variables
 
 * defaults/main.yml
-  * first_var
-  * sec_var
-  * third_var
-* vars/main.yml
-  * first_var
-  * sec_var
-  * third_var
+  * initial_netplan_config_path: default netplan config
+  * expected_net_plan_config_path: Adjusted netplan config
+  * python_selinux: python se-linux package name depening on OS family
+  * nfs_package: nfs package name depening on OS family
 
 
 ## Dependencies
 
-List role ansible-galaxy dependencies - if any.
+This role doesn't depend on any additional ansible-galaxy roles.
 
 ## Example Playbook
 
@@ -67,18 +54,14 @@ Add an example playbook
 ---
 
 tasks:
-  - name: Include ansible-role-template present
+  - name: Include ansible-vagrant-box-prep present
     ansible.builtin.include_role:
-      name: ansible-role-template
+      name: ansible-vagrant-box-prep
     vars:
-      ansible_role_template_state: present
+      ansible_vagrant_box_prep_state: present
 
 ...
 ```
 ## License
 
-Add license - if any.
-
-## Changes to role template
-
-* Add github action that flags empty directories on release creation
+MIT

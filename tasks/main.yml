@@ -1,10 +1,10 @@
 ---
 
-# tasks file for ansible-role-template
+# tasks file for ansible-vagrant-box-prep
 
 
-- name: "Desired state is {{ ansible_role_template_state }}"
+- name: "Desired state is {{ ansible_vagrant_box_prep_state }}"
   ansible.builtin.include_tasks:
-    file: "{{ ansible_role_template_state }}.yml"
+    file: "{{ ansible_vagrant_box_prep_state }}.yml"
 
 ...

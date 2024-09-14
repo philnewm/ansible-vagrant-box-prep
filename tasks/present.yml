@@ -1,19 +1,22 @@
 ---
 
-# tasks to install ansible-role-template
-# INFO larger roles should only use **include_tasks** here
+# tasks to install ansible-vagrant-box-prep
 
 
 # INFO This task may be osbolete for your use-case
+- name: Update package cache
+  become: true
+  ansible.builtin.package:
+    update_cache: true
+  changed_when: false
+  
+
 - name: Gather package facts
   ansible.builtin.package_facts:
 
-- name: Install python3-selinux
-  become: true
-  when: "{{ python_selinux[ansible_os_family] }} not in ansible_facts.packages"
-  ansible.builtin.package:
-    name: "{{ python_selinux[ansible_os_family] }}"
-    state: present
+- name: Include dependencies
+  ansible.builtin.include_tasks:
+    file: dependencies.yml
 
 - name: Install Vagrant public SSH key
   ansible.posix.authorized_key:
@@ -23,36 +26,31 @@
 
 - name: Install NFS
   become: true
-  when: "{{ python_selinux[ansible_os_family] }} not in ansible_facts.packages"
+  when: python_selinux[ansible_os_family] not in ansible_facts.packages
   ansible.builtin.package:
     name: "{{ nfs_package[ansible_os_family] }}"
     state: present
 
 - name: Run Ubuntu network setup
   when: ansible_distribution == 'Ubuntu'
+  become: true
   block:
     - name: Remove initial netplan config
-      become: true
       ansible.builtin.file:
-        path: /etc/netplan/00-installer-config.yaml
+        path: "{{ initial_netplan_config_path }}"
         state: absent
 
     - name: Setup network
-      become: true
-      ansible.builtin.copy:
-        dest: /etc/netplan/00-install-config.yaml
-        content: |
-          network:
-            version: 2
-            renderer: NetworkManager
-            ethernets:
-              enp0s3:
-                dhcp4: true
-                optional: false
+      ansible.builtin.template:
+        src: ubuntu_netplan_config.j2
+        dest: "{{ expected_net_plan_config_path }}"
         mode: "0600"
+        owner: root
+        group: root
+      register: setup_network
 
     - name: Apply netplan config
-      become: true
+      when: setup_network.changed
       ansible.builtin.command:
         cmd: |
           netplan generate
@@ -61,7 +59,7 @@
       changed_when: result.rc == 0
 
     - name: Disable networkd-wait-online
-      become: true
+      when: setup_network.changed
       ansible.builtin.systemd_service:
         name: systemd-networkd-wait-online
         enabled: false

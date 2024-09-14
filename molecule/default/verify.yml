@@ -6,10 +6,91 @@
   tasks:
     - name: Initialize role library
       ansible.builtin.include_role:
-        name: ansible-role-template
+        name: ansible-vagrant-box-prep
         tasks_from: init
 
     - name: Gather package facts
       ansible.builtin.package_facts:
+
+    - name: "Test for installed {{ python_selinux[ansible_os_family] }}"
+      ansible.builtin.assert:
+        that: python_selinux[ansible_os_family] in ansible_facts.packages
+        fail_msg: "{{ python_selinux[ansible_os_family] }} not installed."
+        quiet: true
+
+    - name: "Test for installed {{ nfs_package[ansible_os_family] }}"
+      ansible.builtin.assert:
+        that: nfs_package[ansible_os_family] in ansible_facts.packages
+        fail_msg: "{{ nfs_package[ansible_os_family] }} not installed."
+        quiet: true
+
+    - name: Download Vagrant public SSH key
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/hashicorp/vagrant/main/keys/vagrant.pub
+        dest: /tmp/vagrant.pub
+        mode: "0644"
+
+    - name: Check if Vagrant public SSH key is installed in authorized_keys
+      ansible.builtin.command:
+        cmd: grep -f /tmp/vagrant.pub /home/vagrant/.ssh/authorized_keys
+      register: vagrant_key_check
+      changed_when: false
+      failed_when: vagrant_key_check.rc != 0
+
+
+    - name: Assert that Vagrant public SSH key matches
+      ansible.builtin.assert:
+        that:
+          - vagrant_key_check.rc == 0
+        fail_msg: "The Vagrant public SSH key was not found in the authorized_keys file"
+        quiet: true
+
+    - name: Test Ubuntu network config
+      when: ansible_distribution == "Ubuntu"
+      block:
+        - name: Check if netplan configuration file exists
+          ansible.builtin.stat:
+            path: "{{ expected_net_plan_config_path }}"
+          register: netplan_file
+          changed_when: false
+
+        - name: Test netplan config exists
+          ansible.builtin.assert:
+            that:
+              - netplan_file.stat.exists
+            fail_msg: "Expected netplan config '{{ expected_net_plan_config_path }}' was not found"
+            quiet: true
+
+        - name: Verify netplan configuration file content
+          become: true
+          ansible.builtin.command:
+            cmd: "cat {{ expected_net_plan_config_path }}"
+          register: netplan_content
+          changed_when: false
+
+        - name: Assert that the netplan configuration is correct
+          ansible.builtin.assert:
+            that:
+              - "'network:' in netplan_content.stdout"
+              - "'version: 2' in netplan_content.stdout"
+              - "'renderer: NetworkManager' in netplan_content.stdout"
+              - "'enp0s3:' in netplan_content.stdout"
+              - "'dhcp4: true' in netplan_content.stdout"
+            fail_msg: "Netplan configuration content does not match the expected setup"
+            quiet: true
+
+        - name: Check network interface status
+          ansible.builtin.command:
+            cmd: "ip addr show enp0s3"
+          register: interface_status
+          changed_when: false
+
+        - name: Assert that network interface is up and running
+          ansible.builtin.assert:
+            that:
+              - "'inet' in interface_status.stdout"
+              - "'state UP' in interface_status.stdout"
+            fail_msg: "The network interface enp0s3 is not configured as expected"
+            quiet: true
 
 ...

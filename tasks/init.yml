@@ -8,6 +8,5 @@
     file: "{{ item }}"
   with_items:
     - ../../defaults/main.yml
-    - ../../vars/main.yml
 
 ...

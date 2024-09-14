@@ -3,8 +3,11 @@
 # Runs all dependencies
 
 
-# INFO This task may be osbolete for your use-case
-- name: Gather package facts
-  ansible.builtin.package_facts:
+- name: Install python3-selinux
+  become: true
+  when: python_selinux[ansible_os_family] not in ansible_facts.packages
+  ansible.builtin.package:
+    name: "{{ python_selinux[ansible_os_family] }}"
+    state: present
 
 ...

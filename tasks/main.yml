@@ -5,6 +5,6 @@
 
 - name: "Desired state is {{ ansible_vagrant_box_prep_state }}"
   ansible.builtin.include_tasks:
-    file: "{{ ansible_vagrant_box_prep_state }}.yml"
+    file: "{{ vagrant_box_prep_state }}.yml"
 
 ...

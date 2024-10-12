@@ -1,10 +1,9 @@
 ---
+
 dependency:
   name: galaxy
 driver:
   name: vagrant
-  parallel: true
-  snapshot: initial
   provider:
     name: virtualbox
     type: virtualbox
@@ -25,16 +24,11 @@ platforms:
         ip: "192.168.56.30"
     provider_raw_config_args:
       - "customize ['modifyvm', :id, '--uartmode1', 'disconnected']"
-      - "customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']"
-      - "customize ['modifyvm', :id, '--vram', '256']"
-      - "customize ['modifyvm', :id, '--accelerate-3d', 'off']"
-      - "customize ['modifyvm', :id, '--accelerate-2d-video', 'on']"
     groups:
       - client
 provisioner:
   name: ansible
   env:
-    # ANSIBLE_VERBOSITY: 3
     ANSIBLE_DIFF_ALWAYS: false
   playbooks:
     create: ../default/create.yml
@@ -70,3 +64,5 @@ scenario:
       - verify
       - cleanup
       - destroy
+
+...

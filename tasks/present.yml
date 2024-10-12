@@ -3,13 +3,11 @@
 # tasks to install ansible-vagrant-box-prep
 
 
-# INFO This task may be osbolete for your use-case
 - name: Update package cache
   become: true
   ansible.builtin.package:
     update_cache: true
   changed_when: false
-  
 
 - name: Gather package facts
   ansible.builtin.package_facts:
@@ -30,39 +28,5 @@
   ansible.builtin.package:
     name: "{{ nfs_package[ansible_os_family] }}"
     state: present
-
-- name: Run Ubuntu network setup
-  when: ansible_distribution == 'Ubuntu'
-  become: true
-  block:
-    - name: Remove initial netplan config
-      ansible.builtin.file:
-        path: "{{ initial_netplan_config_path }}"
-        state: absent
-
-    - name: Setup network
-      ansible.builtin.template:
-        src: ubuntu_netplan_config.j2
-        dest: "{{ expected_net_plan_config_path }}"
-        mode: "0600"
-        owner: root
-        group: root
-      register: setup_network
-
-    - name: Apply netplan config
-      when: setup_network.changed
-      ansible.builtin.command:
-        cmd: |
-          netplan generate
-          netplan apply
-      register: result
-      changed_when: result.rc == 0
-
-    - name: Disable networkd-wait-online
-      when: setup_network.changed
-      ansible.builtin.systemd_service:
-        name: systemd-networkd-wait-online
-        enabled: false
-        state: stopped
 
 ...

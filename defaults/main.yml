@@ -2,9 +2,6 @@
 
 # Variables for ansible-role-template
 
-initial_netplan_config_path: "/etc/netplan/00-installer-config.yaml"
-expected_net_plan_config_path: "/etc/netplan/00-install-config.yaml"
-
 python_selinux:
   "RedHat": "python3-libselinux"
   "Debian": "python3-selinux"
